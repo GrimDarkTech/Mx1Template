@@ -56,8 +56,24 @@
     ```cmake
     if (MXENGINE_BUILD_SAMPLES)
     ```
-6. Выполните сборку проекта, используя CMake
-    ```cmake
+6. Перейдите в корень проекта (в Mx1Template)
+    ```bash
+    cd ..
+    ```
+7. Создайте папку **build** для сборки проекта 
+    ```bash
+    mkdir build
+    ```
+8. Перейдите в папку **build**а 
+    ```bash
+    cd build
+    ```
+9. Выполните подготовку к сборке проекта, используя **CMake**
+    ```bash
+    cmake ..
+    ```
+10. Выполните сборку проекта, используя **CMake**
+    ```bash
     cmake --build . --config Debug
     ```
 
