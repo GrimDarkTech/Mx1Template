@@ -31,7 +31,7 @@
     ```
 4. Загрузите зависимости для MxEngine
     ```bash
-    git subdmodule update --init
+    git submodule update --init
     ```
 5. Отключите сборку примеров
 
