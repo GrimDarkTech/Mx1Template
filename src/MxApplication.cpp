@@ -4,8 +4,15 @@
 
 #include <MxEngine.h>
 
+#include "../Scripts/Components/ComponentManager.h"
 #include "../Scripts/Drone/Drone.h"
+#include "../Scripts/Drone/NavigationAgent.h"
 #include "../Scripts/Landscape/Landscape.h"
+#include "../Scripts/Light/Lights.h"
+#include "../Scripts/Camera/CameraCreator.h"
+#include "../Scripts/Camera/CameraMovement.h"
+#include "../Scripts/Raycast/Raycaster.h"
+#include "../Scripts/Entity/Marker.h"
 
 
 namespace Drone
@@ -14,80 +21,17 @@ namespace Drone
 
     class MxApplication : public Application
     {
-    public:
-		
-		bool edit_mode = false;
-		float up_scale = 0.5f;
+		private:
+		NavigationAgent _agent;
+		CameraMovement _cameraMovement;
+	
+    	public:
 
 		MxObject::Handle cameraObject;
 		MxObject::Handle drone;
+		MxObject::Handle terrain;
 
-		void CreateMarker(Vector3 position)
-		{
-			auto sphere = MxObject::Create();
-			sphere->AddComponent<MeshSource>(Primitives::CreateSphere());
-			sphere->AddComponent<MeshRenderer>();
-			sphere->AddComponent<SphereCollider>();
-			sphere->Transform.SetPosition(position);
-			sphere->Transform.SetScale({ 0.05f, 0.05f, 0.05f });
-		}
 
-		
-		void EditCamMode() 
-		{
-			cameraObject->Transform.SetPosition({ 0.0f, 0.5f, 0.0f });
-
-			auto controller = cameraObject->AddComponent<CameraController>();
-			controller->ListenWindowResizeEvent();
-
-			controller->SetRotation({ 0.0f, -90.0f});
-			controller->SetCameraType(MxEngine::CameraType::ORTHOGRAPHIC);
-			Rendering::SetViewport(controller);
-
-			auto input = cameraObject->AddComponent<InputController>();
-			input->BindMovement(KeyCode::W, KeyCode::A, KeyCode::S, KeyCode::D, KeyCode::SPACE, KeyCode::LEFT_SHIFT);
-         
-			Input::SetCursorMode(MxEngine::CursorMode::NORMAL);
-			auto cursorPosition = Input::GetCursorPosition();
-			//Logger::Log(VerbosityType::INFO, cursorPosition);
-			
-		}
-
-		void DemoCamMode() 
-		{
-			auto controller = cameraObject->AddComponent<CameraController>();
-			controller->ListenWindowResizeEvent();
-			Rendering::SetViewport(controller);
-
-			Input::SetCursorMode(MxEngine::CursorMode::DISABLED);
-
-			auto input = cameraObject->AddComponent<InputController>();
-			input->BindMovement(KeyCode::W, KeyCode::A, KeyCode::S, KeyCode::D, KeyCode::SPACE, KeyCode::LEFT_SHIFT);
-			input->BindRotation();
-		}
-
-		void CreateCamera()
-		{
-			cameraObject = MxObject::Create();
-			cameraObject->Name = "Camera Object";
-			cameraObject->Transform.SetPosition({ 0.0f, 0.5f, 0.0f });
-		
-			auto controller = cameraObject->AddComponent<CameraController>();
-			controller->ListenWindowResizeEvent();
-			Rendering::SetViewport(controller);
-			
-			EditCamMode();
-		}
-
-		void LightInit()
-		{
-			auto pointLight = MxObject::Create();
-            auto lightSource = pointLight->AddComponent<SpotLight>();
-            
-            lightSource->SetColor(Vector3(1.0f, 0.7f, 0.0f));
-			lightSource->SetIntensity(100.0f);
-            pointLight->Transform.SetPosition({ 0.0f, 20.0f, 0.0f });
-		}
 
 		void OnMouseClick()
 		{
@@ -128,77 +72,74 @@ namespace Drone
 				//hitPoint.y += up_scale;
 				std::cout << "HitPoint: (" << hitPoint.x << ", " << hitPoint.y << ", " << hitPoint.z << ")" << std::endl;
 				std::cout << "CameraCenter: (" << cameraPosition.x << ", " << cameraPosition.y << ", " << cameraPosition.z << ")" << std::endl;
-				CreateMarker(hitPoint);
 			}
 
 		}
 
-		void MoveObjectToPosition(MxObject::Handle& object, const Vector3& targetPosition, float deltaTime) 
-		{
-			Vector3 currentPosition = object->Transform.GetPosition();
-			// Задаем скорость перемещения
-			float speed = 5.0f; // скорость в единицах в секунду
 
-			// Линейная интерполяция 
-			Vector3 newPosition = glm::mix(currentPosition, targetPosition, speed * deltaTime);
-    
-			// Устанавливаем новую позицию 
-			object->Transform.SetPosition(newPosition);
-		}
-		
-
-
-
-		////////////////////Основные функции////////////////////
         virtual void OnCreate() override
         {
-			CreateCamera();
+			this->cameraObject = MxObject::Create();
+			CameraCreator cameraCreator(cameraObject, Vector3(0, 0, 0));
+			ComponentSystem::ComponentManager::AddComponent(cameraCreator);
 			
-			MxObject::Handle terrain = MxObject::Create();
+			this->terrain = MxObject::Create();
 			Landscape landscape(terrain);
-			landscape.Start();
+			ComponentSystem::ComponentManager::AddComponent(landscape);
 
-			LightInit();
+			auto pointLight = MxObject::Create();
+			Lights lights(pointLight, Vector3(0, 10, 0));
+			ComponentSystem::ComponentManager::AddComponent(lights);
 
 			this->drone = MxObject::Create();
-			UAV uav(drone);
-			uav.Start();
-        }
+			this->drone->Transform.SetPosition(Vector3(0, 0, 0));
+			UAV uav(drone);;
+			ComponentSystem::ComponentManager::AddComponent(uav);
+			
+			_agent.Start(drone);
+			_agent.SetVelocity(2);
+			_agent.moveMode = AgentMode::Teleport;
+
+			_cameraMovement.Start(cameraObject);
+			_cameraMovement.SetTarget(drone);
+			_cameraMovement.offset = Vector3(0, 2, 0);
+			_cameraMovement.mode = CameraMode::Free;
+		}
 
         virtual void OnUpdate() override
         {
-
-			Vector3 targetPosition = Vector3(0.5, 1.5, -1);
-			float velocity = 2.0f;
-
-			Vector3 delta = targetPosition - drone->Transform.GetPosition();
-			Vector3 direction;
-			if(Length(delta) > 0.001f)
+			try
 			{
-				direction = Normalize(delta);
+				_cameraMovement.Update();
+				_agent.Update();
 			}
-			else
+			catch (const char* error_message)
 			{
-				direction = Vector3(0, 0, 0);
+				Logger::Log(VerbosityType::ERROR, error_message);
 			}
 
-			drone->Transform.SetPosition(drone->Transform.GetPosition() + direction * velocity * Time::Delta());
+			if (Input::IsKeyPressed(KeyCode::I)) 
+			{
+				_cameraMovement.mode = static_cast<CameraMode>((static_cast<int>(_cameraMovement.mode) + 1) % 2);
+			}
 
-
-			if (Input::IsKeyPressed(KeyCode::I)) {
-				if (!edit_mode) {	
-					edit_mode = true;
-					Logger::Log(VerbosityType::INFO, "Change to Edit mode");
-					DemoCamMode();
-				} else if (edit_mode) {
-					edit_mode = false;
-					Logger::Log(VerbosityType::INFO, "Change to Demo mode");
-					EditCamMode();	
+			if (Input::IsKeyPressed(KeyCode::ENTER)) 
+			{
+				if(!_agent.isMoving)
+				{
+					_agent.FollowRoute(true);
+				}
+				else
+				{
+					_agent.isMoving = false;
 				}
 			}
 
-			if (Input::IsMousePressed(MouseButton::LEFT)) {
-				OnMouseClick();
+			if (Input::IsMousePressed(MouseButton::LEFT)) 
+			{
+				Vector3 position = cameraObject->Transform.GetPosition();
+				Marker::CreateMarker(position, Vector3(0.05, 0.05, 0.05), Vector3(1, 0, 0));
+				_agent.AddRoutePosition(position);
 			}
 			
 			if (Input::IsKeyPressed(KeyCode::F)) {
@@ -210,7 +151,6 @@ namespace Drone
         virtual void OnDestroy() override
         {
         }
-		////////////////////////////////////////////////////////
 	};
 }
 

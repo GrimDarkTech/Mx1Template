@@ -1,5 +1,7 @@
 #include <MxEngine.h>
 #include <functional>
+#include <vector>
+
 #include "IComponentBehaviour.h"
 
 namespace ComponentSystem
@@ -7,7 +9,7 @@ namespace ComponentSystem
     class ComponentManager
     {
         public:
-        static std::vector<std::reference_wrapper<IComponentBehaviour>> components;
+        static inline std::vector<std::reference_wrapper<ComponentSystem::IComponentBehaviour>> components;
 
         static void CallUpdate()
         {

@@ -1,3 +1,4 @@
+
 #include "../Components/IComponentBehaviour.h"
 
 using namespace MxEngine;
@@ -26,12 +27,11 @@ class Landscape : public ComponentSystem::IComponentBehaviour
         rigidBody->MakeKinematic();
 
         auto material = renderer->GetMaterial();
-        material->BaseColor = Vector3(1, 1, 1);
     }
 
     virtual void Update() override
     {
-
+        return;
     }
 
     virtual void OnEnable() override
