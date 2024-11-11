@@ -42,7 +42,7 @@ class NavigationAgent
             Vector3 delta = targetPositon - gameObject->Transform.GetPosition();
             Vector3 direction;
 
-            if(Length2(delta) > 0.00001)
+            if(Length2(delta) > 0.0001)
             {
                 direction = Normalize(delta);
             }

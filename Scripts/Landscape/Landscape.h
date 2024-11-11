@@ -16,8 +16,8 @@ class Landscape : public ComponentSystem::IComponentBehaviour
     {
         gameObject->Name = "Landscape";
         gameObject->AddComponent<MeshSource>(AssetManager::LoadMesh("Models/smallMounts.fbx"));
-        auto renderer = gameObject->AddComponent<MeshRenderer>(AssetManager::LoadMaterials("Models/smallMounts.fbx"));
-        
+        auto renderer = gameObject->AddComponent<MeshRenderer>(AssetManager::LoadMaterials("Models/smallMounts.fbx"));          
+
         gameObject->Transform.SetRotation({ 270.0f, 0.0f, 0.0f });
         gameObject->Transform.SetPosition({ 0.0f, 0.0f, 0.0f });
         auto collider = gameObject->AddComponent<BoxCollider>();

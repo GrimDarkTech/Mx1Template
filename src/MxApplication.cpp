@@ -56,24 +56,6 @@ namespace Drone
 
 			// Выполняем raycast
 			float fraction = 0;
-    
-			auto hitResult = Physics::RayCast(cameraPosition, targetPosition, fraction);
-			if(hitResult.IsValid())
-			{
-				MXLOG_INFO("raycast", "found object: " + hitResult->Name);
-			}
-
-			std::cout << "Fraction: " << fraction << std::endl;;
-
-			if (fraction < 1)
-			{	
-				Logger::Log(VerbosityType::INFO, "Raycast done!");
-				Vector3 hitPoint = cameraPosition + (targetPosition - cameraPosition) * fraction;
-				//hitPoint.y += up_scale;
-				std::cout << "HitPoint: (" << hitPoint.x << ", " << hitPoint.y << ", " << hitPoint.z << ")" << std::endl;
-				std::cout << "CameraCenter: (" << cameraPosition.x << ", " << cameraPosition.y << ", " << cameraPosition.z << ")" << std::endl;
-			}
-
 		}
 
 
@@ -138,8 +120,19 @@ namespace Drone
 			if (Input::IsMousePressed(MouseButton::LEFT)) 
 			{
 				Vector3 position = cameraObject->Transform.GetPosition();
-				Marker::CreateMarker(position, Vector3(0.05, 0.05, 0.05), Vector3(1, 0, 0));
-				_agent.AddRoutePosition(position);
+
+				auto camera = cameraObject->GetComponent<CameraController>();;
+				auto hit = Raycaster::Raycast(position, camera->GetDirection(), 20);
+
+				auto hitObject = std::get<0>(hit);
+				auto hitPoint = std::get<1>(hit);
+				auto hitDistance = std::get<2>(hit);
+
+				if(hitObject.IsValid())
+				{
+					Marker::CreateMarker(hitPoint, Vector3(0.05, 0.05, 0.05), Vector3(1, 0, 0));
+					_agent.AddRoutePosition(hitPoint);
+				}
 			}
 			
 			if (Input::IsKeyPressed(KeyCode::F)) {
