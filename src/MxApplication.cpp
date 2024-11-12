@@ -8,6 +8,7 @@
 #include "../Scripts/Drone/Drone.h"
 #include "../Scripts/Drone/NavigationAgent.h"
 #include "../Scripts/Landscape/Landscape.h"
+#include "../Scripts/Landscape/HeigthmapImporter.h"
 #include "../Scripts/Light/Lights.h"
 #include "../Scripts/Camera/CameraCreator.h"
 #include "../Scripts/Camera/CameraMovement.h"
@@ -26,6 +27,7 @@ namespace Drone
 		NavigationAgent _agent;
 		CameraMovement _cameraMovement;
 		CameraRotation _cameraRotation;
+		HeigthmapImporter _heigthmapImporter;
 	
     	public:
 
@@ -90,6 +92,8 @@ namespace Drone
 			_cameraMovement.mode = CameraMode::Free;
 
 			_cameraRotation.SetInputController(cameraObject->GetComponent<InputController>());
+
+			_heigthmapImporter.Import(Vector3(0, 0, 0), "Textures/Heightmap.png", 0.05, 15);
 		}
 
         virtual void OnUpdate() override
