@@ -3,7 +3,25 @@
 Этот репозиторий содержит готовый к использованию шаблон проекта, в котором используется [MxEngine](https://github.com/asc-community/MxEngine). Вы можете отредактировать
 `CMakeLists.txt", чтобы настроить все остальное под свои нужды. Ниже вы можете увидеть шаги, необходимые для создания проекта
 
-### Установка
+## Инструкция по использованию
+[Перейти к инструкции](Manual.md)
+
+## Подготовка
+### Windows
+
+1. Загрузите и установите CMake [Windowsx64](https://github.com/Kitware/CMake/releases/download/v3.31.0/cmake-3.31.0-windows-x86_64.msi)
+2. Загрузите и установите LLVM [Windowsx64](https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.8/LLVM-18.1.8-win64.exe)
+3. Установите Visual Studio Community 2019 [ссылка](https://apps.microsoft.com/detail/xp8cdjnzkfm06w?hl=en-us&gl=RU)
+4. Загрузите пакеты для разработки на С++ в Visual Studio Installer:
+   - Основные компоненты C++;
+   - MSVC (C++ средства сборки x64/x86);
+   - C++ AddressSanitazer;
+   - Средства профилирования С++;
+   - IntelliCode
+     
+Тут могут быть лишние пункты, но у меня с ними работает :D
+
+## Установка
 1. Склонируйте репозиторий
     ```bash
     git clone https://github.com/GrimDarkTech/Mx1Template
