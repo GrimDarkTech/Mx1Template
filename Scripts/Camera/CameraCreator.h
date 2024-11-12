@@ -28,7 +28,7 @@ class CameraCreator : public ComponentSystem::IComponentBehaviour
 			input->BindMovement(KeyCode::W, KeyCode::A, KeyCode::S, KeyCode::D, KeyCode::SPACE, KeyCode::LEFT_SHIFT);
             input->BindRotation();
 
-			Input::SetCursorMode(MxEngine::CursorMode::HIDDEN);
+			Input::SetCursorMode(MxEngine::CursorMode::DISABLED);
         }
 
         virtual void Update() override

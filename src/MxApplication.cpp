@@ -90,18 +90,6 @@ namespace Drone
 			_cameraMovement.mode = CameraMode::Free;
 
 			_cameraRotation.SetInputController(cameraObject->GetComponent<InputController>());
-
-			auto sphere = MxObject::Create();
-			sphere->Transform.SetPosition(Vector3(2, 5, 2));
-        	sphere->Transform.SetScale(Vector3(2, 2, 2));
-        	auto renderer = sphere->AddComponent<MeshRenderer>();
-        	sphere->AddComponent<MeshSource>(Primitives::CreateSphere());
-
-			auto collider = sphere->AddComponent<SphereCollider>();
-			auto rigidBody = sphere->AddComponent<RigidBody>();
-			rigidBody->SetMass(1.0f);
-			rigidBody->SetLinearVelocity({0.0f, 0.0f, 0.0f});
-			rigidBody->MakeKinematic();
 		}
 
         virtual void OnUpdate() override
