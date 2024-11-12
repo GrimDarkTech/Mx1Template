@@ -11,6 +11,7 @@
 #include "../Scripts/Light/Lights.h"
 #include "../Scripts/Camera/CameraCreator.h"
 #include "../Scripts/Camera/CameraMovement.h"
+#include "../Scripts/Camera/CameraRotation.h"
 #include "../Scripts/Raycast/Raycaster.h"
 #include "../Scripts/Entity/Marker.h"
 
@@ -24,6 +25,7 @@ namespace Drone
 		private:
 		NavigationAgent _agent;
 		CameraMovement _cameraMovement;
+		CameraRotation _cameraRotation;
 	
     	public:
 
@@ -82,10 +84,24 @@ namespace Drone
 			_agent.SetVelocity(2);
 			_agent.moveMode = AgentMode::Teleport;
 
-			_cameraMovement.Start(cameraObject);
+			_cameraMovement.SetCamera(cameraObject);
 			_cameraMovement.SetTarget(drone);
 			_cameraMovement.offset = Vector3(0, 2, 0);
 			_cameraMovement.mode = CameraMode::Free;
+
+			_cameraRotation.SetInputController(cameraObject->GetComponent<InputController>());
+
+			auto sphere = MxObject::Create();
+			sphere->Transform.SetPosition(Vector3(2, 5, 2));
+        	sphere->Transform.SetScale(Vector3(2, 2, 2));
+        	auto renderer = sphere->AddComponent<MeshRenderer>();
+        	sphere->AddComponent<MeshSource>(Primitives::CreateSphere());
+
+			auto collider = sphere->AddComponent<SphereCollider>();
+			auto rigidBody = sphere->AddComponent<RigidBody>();
+			rigidBody->SetMass(1.0f);
+			rigidBody->SetLinearVelocity({0.0f, 0.0f, 0.0f});
+			rigidBody->MakeKinematic();
 		}
 
         virtual void OnUpdate() override
@@ -121,8 +137,26 @@ namespace Drone
 			{
 				Vector3 position = cameraObject->Transform.GetPosition();
 
-				auto camera = cameraObject->GetComponent<CameraController>();;
-				auto hit = Raycaster::Raycast(position, camera->GetDirection(), 20);
+				auto camera = cameraObject->GetComponent<CameraController>();
+				auto perspectiveCamera = camera->GetCamera<PerspectiveCamera>();
+
+				float nearClip = perspectiveCamera.GetZNear();
+				float fieldOfView = Radians(perspectiveCamera.GetFOV());
+        		float aspectRatio = perspectiveCamera.GetAspectRatio();
+
+        		float halfWidth = tan(fieldOfView * 0.5) * nearClip;
+        		float halfHeight = halfWidth / aspectRatio;
+
+				Vector2 mousePosition = Input::GetCursorPosition();
+				Vector2 windowSize = GlobalConfig::GetWindowSize();
+
+				float normalizedX = (mousePosition.x / windowSize.x) * 2 - 1;
+				float normalizedY = (mousePosition.y / windowSize.y) * 2 - 1;
+
+        		Vector3 direction = camera->GetDirection() * nearClip - Vector3(normalizedX * halfWidth * 2, normalizedY * halfHeight * 2, 0);
+				direction = Normalize(direction);
+
+				auto hit = Raycaster::Raycast(position, direction, 20);
 
 				auto hitObject = std::get<0>(hit);
 				auto hitPoint = std::get<1>(hit);
@@ -133,6 +167,11 @@ namespace Drone
 					Marker::CreateMarker(hitPoint, Vector3(0.05, 0.05, 0.05), Vector3(1, 0, 0));
 					_agent.AddRoutePosition(hitPoint);
 				}
+			}
+
+			if (Input::IsMousePressed(MouseButton::RIGHT))
+			{
+				_cameraRotation.SwitchRotationMode();			
 			}
 			
 			if (Input::IsKeyPressed(KeyCode::F)) {

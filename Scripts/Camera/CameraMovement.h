@@ -19,7 +19,7 @@ class CameraMovement
     {
     }
 
-    void Start(MxEngine::MxObject::Handle gameObject)
+    void SetCamera(MxEngine::MxObject::Handle gameObject)
     {
         this->gameObject = gameObject;
     }
