@@ -20,6 +20,7 @@
    - IntelliCode
   
 Тут могут быть лишние пункты, но у меня с ними работает :D
+
 4. Загрузите и установите CMake [Windowsx64](https://github.com/Kitware/CMake/releases/download/v3.31.0/cmake-3.31.0-windows-x86_64.msi)
      
 
