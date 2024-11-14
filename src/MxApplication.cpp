@@ -29,9 +29,11 @@ namespace Drone
 		CameraMovement _cameraMovement;
 		CameraRotation _cameraRotation;
 		HeigthmapImporter _heigthmapImporter;
+		UAV _uav;
 
 		float _velocity = 1.5f;
 		Vector3 _startPosition = Vector3(0, 0, 0);
+		char _modelName[128]  = "Drone_plane2.fbx";
 	
     	public:
 		MxObject::Handle cameraObject;
@@ -57,8 +59,8 @@ namespace Drone
 
 			this->drone = MxObject::Create();
 			this->drone->Transform.SetPosition(_startPosition);
-			UAV uav(drone);;
-			ComponentSystem::ComponentManager::AddComponent(uav);
+			
+			_uav.Start(drone, _modelName);
 			
 			_agent.Start(drone);
 			_agent.SetVelocity(_velocity);
@@ -87,6 +89,10 @@ namespace Drone
 
 				ImGui::Begin("Drone velocity m/s");
         		ImGui::InputFloat("Velocity", &_velocity);
+ 				ImGui::End();
+
+				ImGui::Begin("Drone model");
+        		ImGui::InputText("", _modelName, sizeof(_modelName));
  				ImGui::End();
 
 				Vector3GUI::DrawGUIReference(_startPosition, "Press R to create new drone");

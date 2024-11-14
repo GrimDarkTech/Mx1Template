@@ -1,40 +1,41 @@
 
-#include "../Components/IComponentBehaviour.h"
-
 using namespace MxEngine;
 
-class UAV : public ComponentSystem::IComponentBehaviour
+class UAV
 {
-        public:
+    private:
+    MxObject::Handle gameObject;
 
-        UAV(MxObject::Handle gameObject) : IComponentBehaviour(gameObject)
+    public:
+    UAV()
+    {
+    }
+
+    void Start(MxEngine::MxObject::Handle gameObject, std::string modelName)
+    {
+        this->gameObject = gameObject;
+        this->gameObject->Name = "Drone";
+
+        auto mesh = this->gameObject->AddComponent<MeshSource>(AssetManager::LoadMesh(("Models/" + modelName).c_str()));
+        TransformComponent meshTransform;
+        meshTransform.SetRotation(Vector3(90, 0, -90));
+        mesh->Mesh->GetSubMeshByIndex(0).SetTransform(meshTransform);
+        auto renderer = this->gameObject->AddComponent<MeshRenderer>();
+
+        renderer->GetMaterial()->AlbedoMap = AssetManager::LoadTexture("Models/Drone_DefaultMaterial_BaseColor.png");
+        this->gameObject->Transform.SetRotation({ 0, 0.0f, 0.0f });
+        this->gameObject->Transform.SetScale({ 0.5f, 0.5f, 0.5f });
+
+        auto material = renderer->GetMaterial();
+    }
+
+    void ReloadModel(std::string modelName)
+    {
+        auto loaded = AssetManager::LoadMesh(("Models/" + modelName).c_str());
+        if(loaded.IsValid())
         {
+                    auto mesh = this->gameObject->GetComponent<MeshSource>();
+                    mesh->Mesh = loaded;
         }
-
-        virtual void Start() override
-        {
-            gameObject->Name = "Drone";
-
-            auto mesh = gameObject->AddComponent<MeshSource>(AssetManager::LoadMesh("Models/Drone_plane2.fbx"));
-            TransformComponent meshTransform;
-            meshTransform.SetRotation(Vector3(90, 0, -90));
-            mesh->Mesh->GetSubMeshByIndex(0).SetTransform(meshTransform);
-			auto renderer = gameObject->AddComponent<MeshRenderer>();
-
-            renderer->GetMaterial()->AlbedoMap = AssetManager::LoadTexture("Models/Drone_DefaultMaterial_BaseColor.png");
-			gameObject->Transform.SetRotation({ 0, 0.0f, 0.0f });
-			gameObject->Transform.SetScale({ 0.5f, 0.5f, 0.5f });
-
-			auto material = renderer->GetMaterial();
-        }
-
-        virtual void Update() override
-        {
-            return;
-        }
-
-        virtual void OnEnable() override
-        {
-
-        }
+    }
 };
