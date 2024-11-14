@@ -15,9 +15,12 @@ class NavigationAgent
     float _velocity;
     int _currentPoint;
     MxEngine::MxObject::Handle gameObject;
+    Vector3 _velocityVector = Vector3(0, 0, 0);
+    bool isStarted = false;
     
     public:
     bool isMoving;
+    Vector3 rotation;
     AgentMode moveMode;
 
     NavigationAgent()
@@ -32,17 +35,18 @@ class NavigationAgent
         _velocity = 0;
         _currentPoint = 0;
         this->_velocity = 0;
+        isStarted = true;
     }
 
     void Update()
     {
-        if(isMoving && _routePositions.size() > _currentPoint)
+        if(isStarted && isMoving && _routePositions.size() > _currentPoint)
         {
             Vector3 targetPositon = _routePositions[_currentPoint];
             Vector3 delta = targetPositon - gameObject->Transform.GetPosition();
             Vector3 direction;
 
-            if(Length2(delta) > 0.001)
+            if(Length2(delta) > 0.01)
             {
                 direction = Normalize(delta);
             }
@@ -54,8 +58,18 @@ class NavigationAgent
 
             if(moveMode == AgentMode::TeleportAndRotate)
             {
-                gameObject->Transform.LookAt(targetPositon);
+                float xAngle = atan2(direction.y, direction.z);
+                float yAngle = atan2(direction.x, direction.z);
+                float zAngle = atan2(direction.y, direction.x);
+
+                if((yAngle < -0.01 || yAngle > 0.01) && (xAngle < -0.01 || xAngle > 0.01))
+                {
+                    Vector3 rot = Vector3(0, yAngle, zAngle) * 57.29577f + rotation;
+                    gameObject->Transform.SetRotation(rot);
+                }
             }
+
+            _velocityVector = direction *_velocity;
             gameObject->Transform.SetPosition(gameObject->Transform.GetPosition() + direction *_velocity * Time::Delta());
         }
     }
@@ -69,6 +83,11 @@ class NavigationAgent
     {
         velocity = abs(velocity);
         _velocity = velocity;
+    }
+
+    Vector3 GetVelocityVector()
+    {
+        return _velocityVector;
     }
 
     void PrintRoute()

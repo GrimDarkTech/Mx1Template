@@ -15,9 +15,14 @@ class UAV : public ComponentSystem::IComponentBehaviour
         {
             gameObject->Name = "Drone";
 
-            gameObject->AddComponent<MeshSource>(AssetManager::LoadMesh("Models/Drone.fbx"));
-			auto renderer = gameObject->AddComponent<MeshRenderer>(AssetManager::LoadMaterials("Models/Drone.fbx"));
-			gameObject->Transform.SetRotation({ 270.0f, 0.0f, 0.0f });
+            auto mesh = gameObject->AddComponent<MeshSource>(AssetManager::LoadMesh("Models/Drone_plane2.fbx"));
+            TransformComponent meshTransform;
+            meshTransform.SetRotation(Vector3(90, 0, -90));
+            mesh->Mesh->GetSubMeshByIndex(0).SetTransform(meshTransform);
+			auto renderer = gameObject->AddComponent<MeshRenderer>();
+
+            renderer->GetMaterial()->AlbedoMap = AssetManager::LoadTexture("Models/Drone_DefaultMaterial_BaseColor.png");
+			gameObject->Transform.SetRotation({ 0, 0.0f, 0.0f });
 			gameObject->Transform.SetScale({ 0.5f, 0.5f, 0.5f });
 
 			auto material = renderer->GetMaterial();

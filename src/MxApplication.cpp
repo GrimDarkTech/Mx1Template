@@ -15,6 +15,7 @@
 #include "../Scripts/Camera/CameraRotation.h"
 #include "../Scripts/Raycast/Raycaster.h"
 #include "../Scripts/Entity/Marker.h"
+#include "../Scripts/GUI/Vector3GUI.h"
 
 
 namespace Drone
@@ -28,39 +29,16 @@ namespace Drone
 		CameraMovement _cameraMovement;
 		CameraRotation _cameraRotation;
 		HeigthmapImporter _heigthmapImporter;
+
+		float _velocity = 0;
+		Vector3 _startPosition = Vector3(0, 0, 0);
 	
     	public:
-
 		MxObject::Handle cameraObject;
 		MxObject::Handle drone;
 		MxObject::Handle terrain;
-
-
-
-		void OnMouseClick()
-		{
-			Vector2 mousePosition = Input::GetCursorPosition();
-			Vector2 windowSize = GlobalConfig::GetWindowSize();
-
-			std::cout << "Mouse: (" <<  (mousePosition.x / windowSize.x) * 2 - 1.0f << ", " << (mousePosition.y / windowSize.y) * 2 - 1.0f<< ")" << std::endl;
-
-			auto controller = cameraObject->GetComponent<CameraController>();
-
-			Vector3 cameraPosition = cameraObject->Transform.GetPosition(); // Позиция камеры 
-
-			Vector3 rayDirection = controller->GetDirection(); 
-
-			float ratio = controller->Camera.GetAspectRatio();
-			float scaleFactor = -10.0f;
-			Vector3 offset = Vector3(((mousePosition.x / windowSize.x) * 2 - 1.0f) * scaleFactor * ratio, 0, ((mousePosition.y / windowSize.y) * 2 - 1.0f) * scaleFactor);
-
-			float castDistance = 10;
-			
-			Vector3 targetPosition = cameraPosition + offset + rayDirection * castDistance;
-
-			// Выполняем raycast
-			float fraction = 0;
-		}
+		Vector3 targetPointOffset = Vector3(0, 0.05 ,0);
+		Vector3 droneVelocity;
 
 
         virtual void OnCreate() override
@@ -78,13 +56,14 @@ namespace Drone
 			ComponentSystem::ComponentManager::AddComponent(lights);
 
 			this->drone = MxObject::Create();
-			this->drone->Transform.SetPosition(Vector3(0, 0, 0));
+			this->drone->Transform.SetPosition(_startPosition);
 			UAV uav(drone);;
 			ComponentSystem::ComponentManager::AddComponent(uav);
 			
 			_agent.Start(drone);
-			_agent.SetVelocity(2);
-			_agent.moveMode = AgentMode::Teleport;
+			_agent.SetVelocity(_velocity);
+			_agent.rotation = Vector3(0, 0, 180);
+			_agent.moveMode = AgentMode::TeleportAndRotate;
 
 			_cameraMovement.SetCamera(cameraObject);
 			_cameraMovement.SetTarget(drone);
@@ -102,6 +81,15 @@ namespace Drone
 			{
 				_cameraMovement.Update();
 				_agent.Update();
+				Vector3GUI::DrawGUI(_agent.GetVelocityVector(), "Velocity m/s");
+				Vector3GUI::DrawGUILabels(drone->Transform.GetPosition(), "Position GPS", "' Longitude", "' Altitude", "' Latitude");
+				Vector3GUI::DrawGUILabels(drone->Transform.GetRotation(), "Rotation Gyro", "Pitch", "Yaw", "Roll");
+
+				ImGui::Begin("Drone velocity m/s");
+        		ImGui::InputFloat("Velocity", &_velocity);
+ 				ImGui::End();
+
+				Vector3GUI::DrawGUIReference(_startPosition, "Press R to create new drone");
 			}
 			catch (const char* error_message)
 			{
@@ -155,7 +143,9 @@ namespace Drone
 				auto hitDistance = std::get<2>(hit);
 
 				if(hitObject.IsValid())
-				{
+				{	
+					std::srand(time(0));
+					hitPoint += float(std::rand()%10) * targetPointOffset;
 					Marker::CreateMarker(hitPoint, Vector3(0.05, 0.05, 0.05), Vector3(1, 0, 0));
 					_agent.AddRoutePosition(hitPoint);
 				}
@@ -164,6 +154,12 @@ namespace Drone
 			if (Input::IsMousePressed(MouseButton::RIGHT))
 			{
 				_cameraRotation.SwitchRotationMode();			
+			}
+
+			if (Input::IsKeyPressed(KeyCode::R))
+			{
+				_agent.SetVelocity(_velocity);
+				drone->Transform.SetPosition(_startPosition);
 			}
 			
 			if (Input::IsKeyPressed(KeyCode::F)) {
