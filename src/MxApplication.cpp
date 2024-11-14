@@ -30,7 +30,7 @@ namespace Drone
 		CameraRotation _cameraRotation;
 		HeigthmapImporter _heigthmapImporter;
 
-		float _velocity = 0;
+		float _velocity = 1.5f;
 		Vector3 _startPosition = Vector3(0, 0, 0);
 	
     	public:
